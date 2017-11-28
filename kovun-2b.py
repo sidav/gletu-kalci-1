@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 global r, n, Psi, Fi, X, XX, L
 
-LST = open("schrodinger-2b.txt", "wt")
+LST = open("kovun-2b.txt", "wt")
 
 # potential function
 def U(x):
@@ -110,7 +110,7 @@ def plotting_f():
     plt.ylabel("f(E)", fontsize=18, color="k")
     plt.grid(True)
     # save to file
-    plt.savefig('schrodinger-2b-f.pdf', dpi=300)
+    plt.savefig('kovun-2b-f.pdf', dpi=300)
     plt.show()
 
 
@@ -134,7 +134,7 @@ def plotting_wf(e):
     plt.text(-1.5, 2.7, string1, fontsize=14, color='black')
     plt.text(-1.5, 2.3, string2, fontsize=14, color="black")
     # save to file
-    name = "schrodinger-2b" + "-" + str(ngr) + ".pdf"
+    name = "kovun-2b" + "-" + str(ngr) + ".pdf"
     plt.savefig(name, dpi=300)
     plt.show()
 

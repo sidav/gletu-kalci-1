@@ -7,8 +7,11 @@ from scipy.integrate import odeint
 from scipy.misc import derivative
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+from scipy.integrate import quad
+import math
+
 global r, n, Psi, Fi, X, XX
-T = open("schrodinger-2b.txt", "w")
+T = open("kovun-2a.txt", "w")
 
 
 # potential function
@@ -20,6 +23,23 @@ def U(x):
 def q(e, x):
     return 2.0*(e-U(x))
 
+
+def operT(funF, X):
+    localX = [X[0] - 2 * 1.e-6]
+    for x in X:
+        localX.append(x)
+    localX.append(X[len(X) - 1] + 2 * 1.e-6)
+
+    localFunF = [0]
+    for val in funF:
+        localFunF.append(val)
+    localFunF.append(0)
+
+    fun = interp1d(localX, localFunF, kind='cubic')
+    der = []
+    for x in X:
+        der.append(-1 / 2 * derivative(fun, x, dx=1.e-6, n=2, order=5))
+    return der
 
 def system1(cond1, X):
     global eee
@@ -79,19 +99,58 @@ def f_fun(e):
     return f
 
 
+def average_value(psi, oper_value):
+    global X
+    value = []
+    for ind in range(len(psi)):
+        value.append(psi[ind] * oper_value[ind])
+
+    fun = interp1d(X, value, kind='cubic')
+    result = quad(fun, A, B)
+    return result
+
+
 def plotting_wf0(e):
     global r, n, Psi, Fi, X, XX
     ff = f_fun(e)
     print("f=", ff)
     plt.axis([A, B, U0, W])
     Upot = np.array([U(X[i]) for i in np.arange(n)])
+
+    coefPsi = average_value(Psi, Psi)
+    Psi[:] = Psi[:] / math.sqrt(coefPsi[0])
+    normPsi = average_value(Psi, Psi)
+    print("integrate Psi = ", normPsi[0])
+
+    coefFi = average_value(Fi, Fi)
+    Fi[:] = Fi[:] / math.sqrt(coefFi[0])
+    normFi = average_value(Fi, Fi)
+    print("integrate Fi = ", normFi[0])
+
+    averageT = average_value(Psi, operT(Psi, X))
+    print("<T> = ", averageT[0])
+
+    UPsiValue = []
+    for ind in range(len(X)):
+        UPsiValue.append(Psi[ind] * U(X[ind]))
+    averageU = average_value(Psi, UPsiValue)
+    print("<U> = ", averageU[0])
+
+    print("<T> + <U> = ", averageT[0] + averageU[0])
+
+    Psi2 = []
+    for psi in Psi:
+        Psi2.append(math.pow(psi, 2))
+
     plt.plot(X, Upot, 'g-', linewidth=6.0, label="U(x)")
     Zero = np.zeros(n, dtype=float)
     plt.plot(X, Zero, 'k-', linewidth=1.0)  # abscissa axis
     plt.plot(X, Psi, 'r-', linewidth=2.0, label="Psi(x)")
-    plt.plot(XX, Fi, 'b-', linewidth=2.0, label="Fi(x)")
+    # plt.plot(XX, Fi, 'b-', linewidth=2.0, label="Fi(x)")
+    plt.plot(X, Psi2, 'b-', linewidth=2.0, label="Psi^2(x)") # <---
     plt.xlabel("X", fontsize=18, color="k")
-    plt.ylabel("Psi(x), Fi(x), U(x)", fontsize=18, color="k")
+    # plt.ylabel("Psi(x), Fi(x), U(x)", fontsize=18, color="k")
+    plt.ylabel("Psi(x), Psi^2(x), U(x)", fontsize=18, color="k") # <---
     plt.grid(True)
     plt.legend(fontsize=16, shadow=True, fancybox=True, loc='upper right')
     plt.plot([X[r]], [Psi[r]], color='red', marker='o', markersize=7)
@@ -100,7 +159,7 @@ def plotting_wf0(e):
     plt.text(-1.5, 2.7, string1, fontsize=14, color='black')
     plt.text(-1.5, 2.3, string2, fontsize=14, color="black")
     # save to file
-    name = "schrodinger-2a.pdf"
+    name = "kovun-2a.pdf"
     plt.savefig(name, dpi=300)
     plt.show()
 
